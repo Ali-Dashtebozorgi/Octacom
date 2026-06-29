@@ -3,7 +3,7 @@ using Octacom.Domain;
 using Octacom.Domain.Base;
 using Octacom.Domain.ValueObjects;
 
-namespace Octacom.UnitTests;
+namespace Octacom.UnitTests.Dmain;
 
 public class BookingTests
 {

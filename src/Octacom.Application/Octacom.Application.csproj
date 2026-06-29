@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Octacom.Domain\Octacom.Domain.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -19,6 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\Octacom.Application\Octacom.Application.csproj" />
     <ProjectReference Include="..\..\src\Octacom.Domain\Octacom.Domain.csproj" />
   </ItemGroup>
 

@@ -1,6 +1,6 @@
 ﻿using Octacom.Domain.ValueObjects;
 
-namespace Octacom.UnitTests;
+namespace Octacom.UnitTests.Dmain;
 
 using FluentAssertions;
 
