@@ -1,8 +1,9 @@
-﻿using System.Net;
-using System.Net.Http.Json;
-using FluentAssertions;
+﻿using FluentAssertions;
 using Octacom.API.Common;
 using Octacom.Application.DTOs;
+using System;
+using System.Net;
+using System.Net.Http.Json;
 
 namespace Octacom.IntegrationTests;
 
