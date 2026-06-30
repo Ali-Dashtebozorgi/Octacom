@@ -110,6 +110,7 @@ public class ConferenceService : IConferenceService
         AttendeeEmail = booking.AttendeeEmail.Value,
         Status = booking.Status.ToString(),
         BookedAt = booking.BookedAt,
-        CancelledAt = booking.CancelledAt
+        CancelledAt = booking.CancelledAt,
+        ConfirmationCode = booking.ConfirmationCode,
     };
 }

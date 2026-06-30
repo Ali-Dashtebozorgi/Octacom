@@ -41,6 +41,10 @@ public class BookingConfiguration : IEntityTypeConfiguration<Booking>
         builder.Property(b => b.CancelledAt)
             .IsRequired(false);
 
+        builder.Property(b => b.ConfirmationCode)
+            .IsRequired()
+            .HasMaxLength(20);
+
         builder.HasIndex(b => new { b.ConferenceId, b.AttendeeEmail })
             .IsUnique()
             .HasFilter("[Status] = 'Confirmed'");

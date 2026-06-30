@@ -97,4 +97,41 @@ public class BookingTests
 
         act.Should().Throw<ArgumentException>();
     }
+
+    // -------------------------------------------------------
+    // ConfirmationCode
+    // -------------------------------------------------------
+
+    [Fact]
+    public void NewBooking_ShouldGenerateConfirmationCode()
+    {
+        var booking = CreateBooking();
+
+        booking.ConfirmationCode.Should().NotBeNullOrWhiteSpace();
+    }
+
+    [Fact]
+    public void NewBooking_ConfirmationCode_ShouldStartWithOctPrefix()
+    {
+        var booking = CreateBooking();
+
+        booking.ConfirmationCode.Should().StartWith("OCT-");
+    }
+
+    [Fact]
+    public void NewBooking_ConfirmationCode_ShouldHaveCorrectFormat()
+    {
+        var booking = CreateBooking();
+
+        booking.ConfirmationCode.Should().MatchRegex(@"^OCT-[A-Z2-9]{5}$");
+    }
+
+    [Fact]
+    public void TwoNewBookings_ShouldHaveDifferentConfirmationCodes()
+    {
+        var booking1 = CreateBooking();
+        var booking2 = CreateBooking();
+
+        booking1.ConfirmationCode.Should().NotBe(booking2.ConfirmationCode);
+    }
 }

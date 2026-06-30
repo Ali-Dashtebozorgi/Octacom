@@ -5,10 +5,16 @@ namespace Octacom.Domain;
 
 public class Booking : Entity
 {
+    private const string ConfirmationCodeCharacters = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    private static readonly Random Random = new();
+
+
     public Guid ConferenceId { get; private set; }
     public string AttendeeName { get; private set; }
     public Email AttendeeEmail { get;private  set; }
     public BookingStatus Status { get; private set; }
+    public string ConfirmationCode { get; private set; }
+
     public DateTime BookedAt { get; private set; }
     public DateTime? CancelledAt { get; private set; }
 
@@ -26,6 +32,7 @@ public class Booking : Entity
         Status = BookingStatus.Confirmed;
         BookedAt = DateTime.UtcNow;
         CancelledAt = null;
+        ConfirmationCode = GenerateConfirmationCode();
     }
 
     #region Guards
@@ -49,6 +56,16 @@ public class Booking : Entity
     }
 
     #endregion
+    private static string GenerateConfirmationCode()
+    {
+        var chars = new char[5];
+        for (int i = 0; i < chars.Length; i++)
+        {
+            chars[i] = ConfirmationCodeCharacters[Random.Next(ConfirmationCodeCharacters.Length)];
+        }
+
+        return $"OCT-{new string(chars)}";
+    }
 
     public void Cancel()
     {

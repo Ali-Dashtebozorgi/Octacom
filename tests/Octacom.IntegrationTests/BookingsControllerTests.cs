@@ -53,12 +53,26 @@ public class BookingsControllerTests : IntegrationTestBase
         body.Data!.AttendeeName.Should().Be("Ali Dasht");
         body.Data.AttendeeEmail.Should().Be("ali@test.com");
         body.Data.Status.Should().Be("Confirmed");
+        body.Data.ConfirmationCode.Should().MatchRegex(@"^OCT-[A-Z2-9]{5}$");
 
         // Verify BookedSeats incremented via the conference endpoint
         var conferenceResponse = await Client.GetAsync($"/api/conferences/{conferenceId}");
         var conferenceBody = await conferenceResponse.Content.ReadFromJsonAsync<ApiResponse<ConferenceResponse>>();
         conferenceBody!.Data!.BookedSeats.Should().Be(1);
         conferenceBody.Data.AvailableSeats.Should().Be(9);
+    }
+
+    [Fact]
+    public async Task BookSeat_MultipleBookings_ShouldEachHaveUniqueConfirmationCode()
+    {
+        var conferenceId = await CreateConferenceAsync(capacity: 10);
+
+        var booking1 = await BookSeatAsync(conferenceId, "ali@test.com");
+        var booking2 = await BookSeatAsync(conferenceId, "john@test.com");
+        var booking3 = await BookSeatAsync(conferenceId, "jane@test.com");
+
+        var codes = new[] { booking1.ConfirmationCode, booking2.ConfirmationCode, booking3.ConfirmationCode };
+        codes.Should().OnlyHaveUniqueItems();
     }
 
     [Fact]
@@ -99,6 +113,7 @@ public class BookingsControllerTests : IntegrationTestBase
         var conferenceBody = await conferenceResponse.Content.ReadFromJsonAsync<ApiResponse<ConferenceResponse>>();
         conferenceBody!.Data!.BookedSeats.Should().Be(1);
     }
+
     [Fact]
     public async Task BookSeat_WhenDuplicateEmail_ShouldReturn409()
     {
