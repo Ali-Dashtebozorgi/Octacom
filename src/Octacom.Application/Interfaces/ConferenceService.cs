@@ -84,6 +84,15 @@ public class ConferenceService : IConferenceService
         return conference.Bookings.Select(MapToBookingResponse);
     }
 
+    public async Task<List<ConferenceResponse>> GetAll()
+    {
+        var conferences = await _conferenceRepository.GetAll();
+        return conferences
+            .Select(MapToConferenceResponse)
+            .ToList();
+
+    }
+
     private static ConferenceResponse MapToConferenceResponse(Conference conference) => new()
     {
         Id = conference.Id,

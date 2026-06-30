@@ -14,5 +14,6 @@ public interface IConferenceService
     Task CancelSeat(Guid conferenceId, Guid bookingId);
     Task<BookingResponse> GetBooking(Guid conferenceId, Guid bookingId);
     Task<IEnumerable<BookingResponse>> GetBookingsByConference(Guid conferenceId);
+    Task<List<ConferenceResponse>> GetAll();
 }
 

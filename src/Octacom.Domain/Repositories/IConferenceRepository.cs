@@ -12,5 +12,6 @@ namespace Octacom.Domain.Repositories
         Task<Conference?> GetByIdWithBookings(Guid id);
         Task Add(Conference conference);
         Task Update(Conference conference);
+        Task<List<Conference>> GetAll();
     }
 }

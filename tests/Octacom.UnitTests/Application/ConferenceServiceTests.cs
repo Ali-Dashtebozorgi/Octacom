@@ -363,4 +363,58 @@ public class ConferenceServiceTests
         
         await act.Should().ThrowAsync<ConferenceNotFoundException>();
     }
+
+    // -------------------------------------------------------
+    // GetAll
+    // -------------------------------------------------------
+
+    [Fact]
+    public async Task GetAll_WhenConferencesExist_ShouldReturnAllConferences()
+    {
+        
+        var conference1 = CreateConference(totalCapacity: 50);
+        var conference2 = CreateConference(totalCapacity: 100);
+
+        _conferenceRepositoryMock
+            .Setup(r => r.GetAll())
+            .ReturnsAsync(new List<Conference> { conference1, conference2 });
+
+        var result = await _sut.GetAll();
+
+        result.Should().HaveCount(2);
+        result.Should().Contain(c => c.Id == conference1.Id);
+        result.Should().Contain(c => c.Id == conference2.Id);
+    }
+
+    [Fact]
+    public async Task GetAll_WhenNoConferencesExist_ShouldReturnEmptyList()
+    {
+        _conferenceRepositoryMock
+            .Setup(r => r.GetAll())
+            .ReturnsAsync(new List<Conference>());
+
+        var result = await _sut.GetAll();
+
+        result.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task GetAll_ShouldReturnCorrectlyMappedConferenceResponse()
+    {
+        var conference = CreateConference(totalCapacity: 30);
+
+        _conferenceRepositoryMock
+            .Setup(r => r.GetAll())
+            .ReturnsAsync(new List<Conference> { conference });
+
+        var result = await _sut.GetAll();
+
+        var response = result.Single();
+        response.Id.Should().Be(conference.Id);
+        response.Name.Should().Be(conference.Name);
+        response.TotalCapacity.Should().Be(conference.TotalCapacity);
+        response.BookedSeats.Should().Be(conference.BookedSeats);
+        response.AvailableSeats.Should().Be(conference.AvailableSeats);
+    }
+
 }

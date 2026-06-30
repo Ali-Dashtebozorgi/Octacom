@@ -37,4 +37,9 @@ public class ConferenceRepository : IConferenceRepository
         _context.Conferences.Update(conference);
         await _context.SaveChangesAsync();
     }
+
+    public async Task<List<Conference>> GetAll()
+    {
+        return await _context.Conferences.ToListAsync();
+    }
 }
