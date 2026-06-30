@@ -206,7 +206,7 @@ public class ConferenceServiceTests
     }
 
     [Fact]
-    public async Task BookSeat_WhenConferenceIsFull_ShouldThrowConferenceFullException()
+    public async Task BookSeat_WhenConferenceIsFull_ShouldReturnBookingWithWaitlistedStatus()
     {
         var conference = CreateConference(totalCapacity: 1);
         var existingBooking = CreateBooking(conference.Id, "existing@test.com");
@@ -222,9 +222,9 @@ public class ConferenceServiceTests
             AttendeeEmail = "ali@test.com"
         };
 
-        Func<Task> act = async () => await _sut.BookSeat(conference.Id, request);
+        var result = await _sut.BookSeat(conference.Id, request);
 
-        await act.Should().ThrowAsync<ConferenceFullException>();
+        result.Status.Should().Be("Waitlisted");
     }
 
     [Fact]

@@ -58,6 +58,14 @@ public class Booking : Entity
         Status = BookingStatus.Cancelled;
         CancelledAt = DateTime.UtcNow;
     }
+    public void MarkAsWaitlisted()
+    {
+        Status = BookingStatus.Waitlisted;
+    }
 
+    public void Confirm()
+    {
+        Status = BookingStatus.Confirmed;
+    }
 
 }

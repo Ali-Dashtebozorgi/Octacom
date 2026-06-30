@@ -62,24 +62,43 @@ public class BookingsControllerTests : IntegrationTestBase
     }
 
     [Fact]
-    public async Task BookSeat_WhenConferenceIsFull_ShouldReturn409()
+    public async Task BookSeat_WhenConferenceIsFull_ShouldReturn201WithWaitlistedStatus()
     {
-        
         var conferenceId = await CreateConferenceAsync(capacity: 1);
         await BookSeatAsync(conferenceId, "first@test.com");
 
         var request = new BookSeatRequest { AttendeeName = "John Doe", AttendeeEmail = "john@test.com" };
 
-        
         var response = await Client.PostAsJsonAsync($"/api/conferences/{conferenceId}/bookings", request);
 
-        
-        response.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
 
-        var body = await response.Content.ReadFromJsonAsync<ApiResponse<object>>();
-        body!.Success.Should().BeFalse();
+        var body = await response.Content.ReadFromJsonAsync<ApiResponse<BookingResponse>>();
+        body!.Success.Should().BeTrue();
+        body.Data!.Status.Should().Be("Waitlisted");
     }
 
+    [Fact]
+    public async Task CancelSeat_WhenWaitlistedBookingExists_ShouldPromoteItToConfirmed()
+    {
+        var conferenceId = await CreateConferenceAsync(capacity: 1);
+        var confirmedBooking = await BookSeatAsync(conferenceId, "ali@test.com");
+        var waitlistedBooking = await BookSeatAsync(conferenceId, "john@test.com");
+
+        waitlistedBooking.Status.Should().Be("Waitlisted"); 
+
+        var cancelResponse = await Client.DeleteAsync($"/api/conferences/{conferenceId}/bookings/{confirmedBooking.Id}");
+
+        cancelResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var promotedBookingResponse = await Client.GetAsync($"/api/conferences/{conferenceId}/bookings/{waitlistedBooking.Id}");
+        var promotedBody = await promotedBookingResponse.Content.ReadFromJsonAsync<ApiResponse<BookingResponse>>();
+        promotedBody!.Data!.Status.Should().Be("Confirmed");
+
+        var conferenceResponse = await Client.GetAsync($"/api/conferences/{conferenceId}");
+        var conferenceBody = await conferenceResponse.Content.ReadFromJsonAsync<ApiResponse<ConferenceResponse>>();
+        conferenceBody!.Data!.BookedSeats.Should().Be(1);
+    }
     [Fact]
     public async Task BookSeat_WhenDuplicateEmail_ShouldReturn409()
     {

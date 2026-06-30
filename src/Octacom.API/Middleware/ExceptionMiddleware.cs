@@ -51,7 +51,6 @@ public class ExceptionMiddleware
         {
             ConferenceNotFoundException ex => (HttpStatusCode.NotFound, ex.Message, LogLevel.Warning),
             BookingNotFoundException ex => (HttpStatusCode.NotFound, ex.Message, LogLevel.Warning),
-            ConferenceFullException ex => (HttpStatusCode.Conflict, ex.Message, LogLevel.Warning),
             DuplicateBookingException ex => (HttpStatusCode.Conflict, ex.Message, LogLevel.Warning),
             ArgumentException ex => (HttpStatusCode.BadRequest, ex.Message, LogLevel.Warning),
             InvalidOperationException ex => (HttpStatusCode.BadRequest, ex.Message, LogLevel.Warning),

@@ -49,15 +49,19 @@ namespace Octacom.Domain
             if (booking is null)
                 throw new ArgumentNullException(nameof(booking));
 
-            if (BookedSeats >= TotalCapacity)
-                throw new ConferenceFullException();
-
             bool isDuplicate = _bookings.Any(b =>
                 b.AttendeeEmail.Value == booking.AttendeeEmail.Value &&
                 b.Status == BookingStatus.Confirmed);
 
             if (isDuplicate)
                 throw new DuplicateBookingException(booking.AttendeeEmail.Value);
+
+            if (BookedSeats >= TotalCapacity)
+            {
+                booking.MarkAsWaitlisted();
+                _bookings.Add(booking);
+                return;
+            }
 
             _bookings.Add(booking);
             BookedSeats++;
@@ -68,8 +72,28 @@ namespace Octacom.Domain
             var booking = _bookings.FirstOrDefault(b => b.Id == bookingId)
                           ?? throw new BookingNotFoundException(bookingId);
 
+            bool wasConfirmed = booking.Status == BookingStatus.Confirmed;
+
             booking.Cancel();
+
+            if (!wasConfirmed)
+                return;
+
             BookedSeats--;
+            PromoteNextWaitlistedBooking();
+        }
+        private void PromoteNextWaitlistedBooking()
+        {
+            var nextInLine = _bookings
+                .Where(b => b.Status == BookingStatus.Waitlisted)
+                .OrderBy(b => b.BookedAt)
+                .FirstOrDefault();
+
+            if (nextInLine is null)
+                return;
+
+            nextInLine.Confirm();
+            BookedSeats++;
         }
     }
 }

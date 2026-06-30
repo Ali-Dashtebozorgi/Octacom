@@ -8,258 +8,363 @@ using System.Text;
 using System.Threading.Tasks;
 using Octacom.Domain.Base;
 
-namespace Octacom.UnitTests.Dmain
+namespace Octacom.UnitTests.Dmain;
+
+public class ConferenceTests
 {
-    public class ConferenceTests
+    private Conference CreateConference(int totalCapacity = 10)
     {
-        private Conference CreateConference(int totalCapacity = 10)
-        {
-            return new Conference(
-                id: Guid.NewGuid(),
-                name: "Test Conference",
-                totalCapacity: totalCapacity
-            );
-        }
+        return new Conference(
+            id: Guid.NewGuid(),
+            name: "Test Conference",
+            totalCapacity: totalCapacity
+        );
+    }
 
-        private Booking CreateBooking(Guid conferenceId, string email = "ali@test.com", string name = "Ali Dasht")
-        {
-            return new Booking(
-                id: Guid.NewGuid(),
-                conferenceId: conferenceId,
-                attendeeName: name,
-                attendeeEmail: new Email(email)
-            );
-        }
+    private Booking CreateBooking(Guid conferenceId, string email = "ali@test.com", string name = "Ali Dasht")
+    {
+        return new Booking(
+            id: Guid.NewGuid(),
+            conferenceId: conferenceId,
+            attendeeName: name,
+            attendeeEmail: new Email(email)
+        );
+    }
 
-        // -------------------------------------------------------
-        // Constructor Guards
-        // -------------------------------------------------------
+    // -------------------------------------------------------
+    // Constructor Guards
+    // -------------------------------------------------------
 
-        [Fact]
-        public void NewConference_WhenNameIsEmpty_ShouldThrowArgumentException()
-        {
-            Action act = () => new Conference(Guid.NewGuid(), "", 100);
+    [Fact]
+    public void NewConference_WhenNameIsEmpty_ShouldThrowArgumentException()
+    {
+        Action act = () => new Conference(Guid.NewGuid(), "", 100);
 
-            act.Should().Throw<ArgumentException>();
-        }
+        act.Should().Throw<ArgumentException>();
+    }
 
-        [Fact]
-        public void NewConference_WhenNameIsNull_ShouldThrowArgumentException()
-        {
-            Action act = () => new Conference(Guid.NewGuid(), null!, 100);
+    [Fact]
+    public void NewConference_WhenNameIsNull_ShouldThrowArgumentException()
+    {
+        Action act = () => new Conference(Guid.NewGuid(), null!, 100);
 
-            act.Should().Throw<ArgumentException>();
-        }
+        act.Should().Throw<ArgumentException>();
+    }
 
-        [Fact]
-        public void NewConference_WhenTotalCapacityIsZero_ShouldThrowArgumentException()
-        {
-            Action act = () => new Conference(Guid.NewGuid(), "Test Conference", 0);
+    [Fact]
+    public void NewConference_WhenTotalCapacityIsZero_ShouldThrowArgumentException()
+    {
+        Action act = () => new Conference(Guid.NewGuid(), "Test Conference", 0);
 
-            act.Should().Throw<ArgumentException>();
-        }
+        act.Should().Throw<ArgumentException>();
+    }
 
-        [Fact]
-        public void NewConference_WhenTotalCapacityIsNegative_ShouldThrowArgumentException()
-        {
-            Action act = () => new Conference(Guid.NewGuid(), "Test Conference", -1);
+    [Fact]
+    public void NewConference_WhenTotalCapacityIsNegative_ShouldThrowArgumentException()
+    {
+        Action act = () => new Conference(Guid.NewGuid(), "Test Conference", -1);
 
-            act.Should().Throw<ArgumentException>();
-        }
+        act.Should().Throw<ArgumentException>();
+    }
 
-        // -------------------------------------------------------
-        // Initial State
-        // -------------------------------------------------------
+    // -------------------------------------------------------
+    // Initial State
+    // -------------------------------------------------------
 
-        [Fact]
-        public void NewConference_ShouldHaveZeroBookedSeats()
-        {
-            var conference = CreateConference();
+    [Fact]
+    public void NewConference_ShouldHaveZeroBookedSeats()
+    {
+        var conference = CreateConference();
 
-            conference.BookedSeats.Should().Be(0);
-        }
+        conference.BookedSeats.Should().Be(0);
+    }
 
-        [Fact]
-        public void NewConference_AvailableSeats_ShouldEqualTotalCapacity()
-        {
-            var conference = CreateConference(totalCapacity: 10);
+    [Fact]
+    public void NewConference_AvailableSeats_ShouldEqualTotalCapacity()
+    {
+        var conference = CreateConference(totalCapacity: 10);
 
-            conference.AvailableSeats.Should().Be(10);
-        }
+        conference.AvailableSeats.Should().Be(10);
+    }
 
-        [Fact]
-        public void NewConference_ShouldHaveEmptyBookings()
-        {
-            var conference = CreateConference();
+    [Fact]
+    public void NewConference_ShouldHaveEmptyBookings()
+    {
+        var conference = CreateConference();
 
-            conference.Bookings.Should().BeEmpty();
-        }
+        conference.Bookings.Should().BeEmpty();
+    }
 
-        // -------------------------------------------------------
-        // BookSeat
-        // -------------------------------------------------------
+    // -------------------------------------------------------
+    // BookSeat
+    // -------------------------------------------------------
 
-        [Fact]
-        public void BookSeat_WhenSeatsAvailable_ShouldIncrementBookedSeats()
-        {
-            var conference = CreateConference(totalCapacity: 10);
-            var booking = CreateBooking(conference.Id);
+    [Fact]
+    public void BookSeat_WhenSeatsAvailable_ShouldIncrementBookedSeats()
+    {
+        var conference = CreateConference(totalCapacity: 10);
+        var booking = CreateBooking(conference.Id);
 
-            conference.BookSeat(booking);
+        conference.BookSeat(booking);
 
-            conference.BookedSeats.Should().Be(1);
-        }
+        conference.BookedSeats.Should().Be(1);
+    }
 
-        [Fact]
-        public void BookSeat_WhenSeatsAvailable_ShouldAddBookingToBookings()
-        {
-            var conference = CreateConference(totalCapacity: 10);
-            var booking = CreateBooking(conference.Id);
+    [Fact]
+    public void BookSeat_WhenSeatsAvailable_ShouldAddBookingToBookings()
+    {
+        var conference = CreateConference(totalCapacity: 10);
+        var booking = CreateBooking(conference.Id);
 
-            conference.BookSeat(booking);
+        conference.BookSeat(booking);
 
-            conference.Bookings.Should().ContainSingle(b => b.AttendeeEmail.Value == "ali@test.com");
-        }
+        conference.Bookings.Should().ContainSingle(b => b.AttendeeEmail.Value == "ali@test.com");
+    }
 
-        [Fact]
-        public void BookSeat_WhenConferenceIsFull_ShouldThrowConferenceFullException()
-        {
-            var conference = CreateConference(totalCapacity: 1);
-            var firstBooking = CreateBooking(conference.Id, "ali@test.com");
-            var secondBooking = CreateBooking(conference.Id, "john@test.com");
-            conference.BookSeat(firstBooking);
+    [Fact]
+    public void BookSeat_WhenConferenceIsFull_ShouldWaitlistTheBooking()
+    {
+        var conference = CreateConference(totalCapacity: 1);
+        var firstBooking = CreateBooking(conference.Id, "ali@test.com");
+        var secondBooking = CreateBooking(conference.Id, "john@test.com");
 
-            Action act = () => conference.BookSeat(secondBooking);
+        conference.BookSeat(firstBooking);
+        conference.BookSeat(secondBooking);
 
-            act.Should().Throw<ConferenceFullException>();
-        }
+        secondBooking.Status.Should().Be(BookingStatus.Waitlisted);
+    }
 
-        [Fact]
-        public void BookSeat_WhenSameEmailBooksTwice_ShouldThrowDuplicateBookingException()
-        {
-            var conference = CreateConference(totalCapacity: 10);
-            var firstBooking = CreateBooking(conference.Id, "ali@test.com");
-            var duplicateBooking = CreateBooking(conference.Id, "ali@test.com");
-            conference.BookSeat(firstBooking);
+    [Fact]
+    public void BookSeat_WhenConferenceIsFull_ShouldNotIncrementBookedSeats()
+    {
+        var conference = CreateConference(totalCapacity: 1);
+        var firstBooking = CreateBooking(conference.Id, "ali@test.com");
+        var secondBooking = CreateBooking(conference.Id, "john@test.com");
 
-            Action act = () => conference.BookSeat(duplicateBooking);
+        conference.BookSeat(firstBooking);
+        conference.BookSeat(secondBooking);
 
-            act.Should().Throw<DuplicateBookingException>();
-        }
+        conference.BookedSeats.Should().Be(1);
+    }
 
-        [Fact]
-        public void BookSeat_WhenSameEmailWithDifferentCase_ShouldThrowDuplicateBookingException()
-        {
-            var conference = CreateConference(totalCapacity: 10);
-            var firstBooking = CreateBooking(conference.Id, "ali@test.com");
-            var duplicateBooking = CreateBooking(conference.Id, "ALI@TEST.COM");
-            conference.BookSeat(firstBooking);
+    [Fact]
+    public void BookSeat_WhenConferenceIsFull_ShouldStillAddBookingToBookingsList()
+    {
+        var conference = CreateConference(totalCapacity: 1);
+        var firstBooking = CreateBooking(conference.Id, "ali@test.com");
+        var secondBooking = CreateBooking(conference.Id, "john@test.com");
 
-            Action act = () => conference.BookSeat(duplicateBooking);
+        conference.BookSeat(firstBooking);
+        conference.BookSeat(secondBooking);
 
-            act.Should().Throw<DuplicateBookingException>();
-        }
+        conference.Bookings.Should().HaveCount(2);
+    }
 
-        [Fact]
-        public void BookSeat_MultipleValidBookings_ShouldIncrementCorrectly()
-        {
-            var conference = CreateConference(totalCapacity: 10);
+    [Fact]
+    public void BookSeat_WhenSameEmailBooksTwice_ShouldThrowDuplicateBookingException()
+    {
+        var conference = CreateConference(totalCapacity: 10);
+        var firstBooking = CreateBooking(conference.Id, "ali@test.com");
+        var duplicateBooking = CreateBooking(conference.Id, "ali@test.com");
+        conference.BookSeat(firstBooking);
 
-            conference.BookSeat(CreateBooking(conference.Id, "ali@test.com"));
-            conference.BookSeat(CreateBooking(conference.Id, "john@test.com"));
-            conference.BookSeat(CreateBooking(conference.Id, "jane@test.com"));
+        Action act = () => conference.BookSeat(duplicateBooking);
 
-            conference.BookedSeats.Should().Be(3);
-        }
+        act.Should().Throw<DuplicateBookingException>();
+    }
 
-        [Fact]
-        public void BookSeat_WhenNullBooking_ShouldThrowArgumentNullException()
-        {
-            var conference = CreateConference();
+    [Fact]
+    public void BookSeat_WhenSameEmailWithDifferentCase_ShouldThrowDuplicateBookingException()
+    {
+        var conference = CreateConference(totalCapacity: 10);
+        var firstBooking = CreateBooking(conference.Id, "ali@test.com");
+        var duplicateBooking = CreateBooking(conference.Id, "ALI@TEST.COM");
+        conference.BookSeat(firstBooking);
 
-            Action act = () => conference.BookSeat(null!);
+        Action act = () => conference.BookSeat(duplicateBooking);
 
-            act.Should().Throw<ArgumentNullException>();
-        }
+        act.Should().Throw<DuplicateBookingException>();
+    }
 
-        // -------------------------------------------------------
-        // CancelSeat
-        // -------------------------------------------------------
+    [Fact]
+    public void BookSeat_MultipleValidBookings_ShouldIncrementCorrectly()
+    {
+        var conference = CreateConference(totalCapacity: 10);
 
-        [Fact]
-        public void CancelSeat_WhenBookingExists_ShouldDecrementBookedSeats()
-        {
-            var conference = CreateConference(totalCapacity: 10);
-            var booking = CreateBooking(conference.Id);
-            conference.BookSeat(booking);
+        conference.BookSeat(CreateBooking(conference.Id, "ali@test.com"));
+        conference.BookSeat(CreateBooking(conference.Id, "john@test.com"));
+        conference.BookSeat(CreateBooking(conference.Id, "jane@test.com"));
 
-            conference.CancelSeat(booking.Id);
+        conference.BookedSeats.Should().Be(3);
+    }
 
-            conference.BookedSeats.Should().Be(0);
-        }
+    [Fact]
+    public void BookSeat_WhenNullBooking_ShouldThrowArgumentNullException()
+    {
+        var conference = CreateConference();
 
-        [Fact]
-        public void CancelSeat_WhenBookingExists_ShouldMarkBookingAsCancelled()
-        {
-            var conference = CreateConference(totalCapacity: 10);
-            var booking = CreateBooking(conference.Id);
-            conference.BookSeat(booking);
+        Action act = () => conference.BookSeat(null!);
 
-            conference.CancelSeat(booking.Id);
+        act.Should().Throw<ArgumentNullException>();
+    }
 
-            booking.Status.Should().Be(BookingStatus.Cancelled);
-        }
+    // -------------------------------------------------------
+    // CancelSeat
+    // -------------------------------------------------------
 
-        [Fact]
-        public void CancelSeat_WhenBookingDoesNotExist_ShouldThrowBookingNotFoundException()
-        {
-            var conference = CreateConference(totalCapacity: 10);
+    [Fact]
+    public void CancelSeat_WhenBookingExists_ShouldDecrementBookedSeats()
+    {
+        var conference = CreateConference(totalCapacity: 10);
+        var booking = CreateBooking(conference.Id);
+        conference.BookSeat(booking);
 
-            Action act = () => conference.CancelSeat(Guid.NewGuid());
+        conference.CancelSeat(booking.Id);
 
-            act.Should().Throw<BookingNotFoundException>();
-        }
+        conference.BookedSeats.Should().Be(0);
+    }
 
-        [Fact]
-        public void CancelSeat_WhenAlreadyCancelled_ShouldThrowInvalidOperationException()
-        {
-            var conference = CreateConference(totalCapacity: 10);
-            var booking = CreateBooking(conference.Id);
-            conference.BookSeat(booking);
-            conference.CancelSeat(booking.Id);
+    [Fact]
+    public void CancelSeat_WhenBookingExists_ShouldMarkBookingAsCancelled()
+    {
+        var conference = CreateConference(totalCapacity: 10);
+        var booking = CreateBooking(conference.Id);
+        conference.BookSeat(booking);
 
-            Action act = () => conference.CancelSeat(booking.Id);
+        conference.CancelSeat(booking.Id);
 
-            act.Should().Throw<InvalidOperationException>();
-        }
+        booking.Status.Should().Be(BookingStatus.Cancelled);
+    }
 
-        [Fact]
-        public void CancelSeat_ShouldAllowRebookingAfterCancellation()
-        {
-            var conference = CreateConference(totalCapacity: 1);
-            var booking = CreateBooking(conference.Id, "ali@test.com");
-            conference.BookSeat(booking);
-            conference.CancelSeat(booking.Id);
+    [Fact]
+    public void CancelSeat_WhenBookingDoesNotExist_ShouldThrowBookingNotFoundException()
+    {
+        var conference = CreateConference(totalCapacity: 10);
 
-            var newBooking = CreateBooking(conference.Id, "ali@test.com");
-            Action act = () => conference.BookSeat(newBooking);
+        Action act = () => conference.CancelSeat(Guid.NewGuid());
 
-            act.Should().NotThrow();
-        }
+        act.Should().Throw<BookingNotFoundException>();
+    }
 
-        // -------------------------------------------------------
-        // AvailableSeats
-        // -------------------------------------------------------
+    [Fact]
+    public void CancelSeat_WhenAlreadyCancelled_ShouldThrowInvalidOperationException()
+    {
+        var conference = CreateConference(totalCapacity: 10);
+        var booking = CreateBooking(conference.Id);
+        conference.BookSeat(booking);
+        conference.CancelSeat(booking.Id);
 
-        [Fact]
-        public void AvailableSeats_AfterBookingAndCancelling_ShouldBeCorrect()
-        {
-            var conference = CreateConference(totalCapacity: 10);
-            var booking = CreateBooking(conference.Id);
-            conference.BookSeat(booking);
-            conference.CancelSeat(booking.Id);
+        Action act = () => conference.CancelSeat(booking.Id);
 
-            conference.AvailableSeats.Should().Be(10);
-        }
+        act.Should().Throw<InvalidOperationException>();
+    }
+
+    [Fact]
+    public void CancelSeat_ShouldAllowRebookingAfterCancellation()
+    {
+        var conference = CreateConference(totalCapacity: 1);
+        var booking = CreateBooking(conference.Id, "ali@test.com");
+        conference.BookSeat(booking);
+        conference.CancelSeat(booking.Id);
+
+        var newBooking = CreateBooking(conference.Id, "ali@test.com");
+        Action act = () => conference.BookSeat(newBooking);
+
+        act.Should().NotThrow();
+    }
+
+    // -------------------------------------------------------
+    // AvailableSeats
+    // -------------------------------------------------------
+
+    [Fact]
+    public void AvailableSeats_AfterBookingAndCancelling_ShouldBeCorrect()
+    {
+        var conference = CreateConference(totalCapacity: 10);
+        var booking = CreateBooking(conference.Id);
+        conference.BookSeat(booking);
+        conference.CancelSeat(booking.Id);
+
+        conference.AvailableSeats.Should().Be(10);
+    }
+    // -------------------------------------------------------
+    // Waitlist Promotion
+    // -------------------------------------------------------
+
+    [Fact]
+    public void CancelSeat_WhenWaitlistedBookingExists_ShouldPromoteEarliestWaitlistedBookingToConfirmed()
+    {
+        var conference = CreateConference(totalCapacity: 1);
+        var confirmedBooking = CreateBooking(conference.Id, "ali@test.com");
+        var waitlistedBooking = CreateBooking(conference.Id, "john@test.com");
+
+        conference.BookSeat(confirmedBooking);
+        conference.BookSeat(waitlistedBooking);
+
+        conference.CancelSeat(confirmedBooking.Id);
+
+        waitlistedBooking.Status.Should().Be(BookingStatus.Confirmed);
+    }
+
+    [Fact]
+    public void CancelSeat_WhenWaitlistedBookingIsPromoted_ShouldIncrementBookedSeats()
+    {
+        var conference = CreateConference(totalCapacity: 1);
+        var confirmedBooking = CreateBooking(conference.Id, "ali@test.com");
+        var waitlistedBooking = CreateBooking(conference.Id, "john@test.com");
+
+        conference.BookSeat(confirmedBooking);
+        conference.BookSeat(waitlistedBooking);
+
+        conference.CancelSeat(confirmedBooking.Id);
+
+        conference.BookedSeats.Should().Be(1);
+    }
+
+    [Fact]
+    public void CancelSeat_WhenMultipleWaitlistedBookingsExist_ShouldPromoteEarliestOneOnly()
+    {
+        var conference = CreateConference(totalCapacity: 1);
+        var confirmedBooking = CreateBooking(conference.Id, "ali@test.com");
+        var firstWaitlisted = CreateBooking(conference.Id, "john@test.com");
+        var secondWaitlisted = CreateBooking(conference.Id, "jane@test.com");
+
+        conference.BookSeat(confirmedBooking);
+        conference.BookSeat(firstWaitlisted);
+        conference.BookSeat(secondWaitlisted);
+
+        conference.CancelSeat(confirmedBooking.Id);
+
+        firstWaitlisted.Status.Should().Be(BookingStatus.Confirmed);
+        secondWaitlisted.Status.Should().Be(BookingStatus.Waitlisted);
+    }
+
+    [Fact]
+    public void CancelSeat_WhenNoWaitlistedBookingsExist_ShouldNotThrowAndJustDecrementSeats()
+    {
+        var conference = CreateConference(totalCapacity: 10);
+        var booking = CreateBooking(conference.Id, "ali@test.com");
+        conference.BookSeat(booking);
+
+        conference.CancelSeat(booking.Id);
+
+        conference.BookedSeats.Should().Be(0);
+    }
+
+    [Fact]
+    public void CancelSeat_WhenCancellingAWaitlistedBooking_ShouldNotPromoteAnyoneOrChangeBookedSeats()
+    {
+        var conference = CreateConference(totalCapacity: 1);
+        var confirmedBooking = CreateBooking(conference.Id, "ali@test.com");
+        var waitlistedBooking = CreateBooking(conference.Id, "john@test.com");
+
+        conference.BookSeat(confirmedBooking);
+        conference.BookSeat(waitlistedBooking);
+
+        conference.CancelSeat(waitlistedBooking.Id);
+
+        conference.BookedSeats.Should().Be(1);
+        waitlistedBooking.Status.Should().Be(BookingStatus.Cancelled);
     }
 }
+
