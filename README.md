@@ -1,2 +1,2 @@
 # Octacom
-Ostacom Code Challenge
+Octacom Code Challenge
