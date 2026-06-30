@@ -1,0 +1,698 @@
+{
+  "info": {
+    "name": "Octacom - Conference Booking API",
+    "description": "Mini Conference Ticket Booking API. Covers happy paths and edge cases for conferences and bookings, including waitlist, pagination, and error scenarios.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://localhost:7001",
+      "type": "string"
+    },
+    {
+      "key": "conferenceId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "fullConferenceId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "bookingId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "waitlistedBookingId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Conferences",
+      "item": [
+        {
+          "name": "Create Conference - Happy Path",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test('Has Location header', function () {",
+                  "    pm.response.to.have.header('Location');",
+                  "});",
+                  "var body = pm.response.json();",
+                  "pm.test('Response is success and has data', function () {",
+                  "    pm.expect(body.success).to.be.true;",
+                  "    pm.expect(body.data.id).to.not.be.empty;",
+                  "    pm.expect(body.data.availableSeats).to.eql(50);",
+                  "});",
+                  "pm.collectionVariables.set('conferenceId', body.data.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Tech Summit 2026\",\n  \"totalCapacity\": 50\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/conferences",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "conferences"]
+            }
+          }
+        },
+        {
+          "name": "Create Conference - Small Capacity (for waitlist tests)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "var body = pm.response.json();",
+                  "pm.collectionVariables.set('fullConferenceId', body.data.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Small Workshop\",\n  \"totalCapacity\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/conferences",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "conferences"]
+            }
+          }
+        },
+        {
+          "name": "Create Conference - Invalid (Empty Name)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Response indicates failure', function () {",
+                  "    var body = pm.response.json();",
+                  "    pm.expect(body.success).to.be.false;",
+                  "    pm.expect(body.error).to.not.be.empty;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"\",\n  \"totalCapacity\": 50\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/conferences",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "conferences"]
+            }
+          }
+        },
+        {
+          "name": "Create Conference - Invalid (Zero Capacity)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Invalid Conference\",\n  \"totalCapacity\": 0\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/conferences",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "conferences"]
+            }
+          }
+        },
+        {
+          "name": "Get All Conferences (Paginated)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Response has paged structure', function () {",
+                  "    var body = pm.response.json();",
+                  "    pm.expect(body.data).to.have.property('items');",
+                  "    pm.expect(body.data).to.have.property('totalCount');",
+                  "    pm.expect(body.data).to.have.property('page');",
+                  "    pm.expect(body.data).to.have.property('pageSize');",
+                  "    pm.expect(body.data).to.have.property('totalPages');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/conferences?page=1&pageSize=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "conferences"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "pageSize", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Conference By Id - Happy Path",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Returns correct conference', function () {",
+                  "    var body = pm.response.json();",
+                  "    pm.expect(body.data.id).to.eql(pm.collectionVariables.get('conferenceId'));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/conferences/{{conferenceId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "conferences", "{{conferenceId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Conference By Id - Not Found",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 404', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/conferences/00000000-0000-0000-0000-000000000000",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "conferences", "00000000-0000-0000-0000-000000000000"]
+            }
+          }
+        },
+        {
+          "name": "Get Bookings For Conference (Paginated)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Response has paged structure', function () {",
+                  "    var body = pm.response.json();",
+                  "    pm.expect(body.data).to.have.property('items');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/conferences/{{conferenceId}}/bookings?page=1&pageSize=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "conferences", "{{conferenceId}}", "bookings"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "pageSize", "value": "10" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bookings",
+      "item": [
+        {
+          "name": "Book Seat - Happy Path",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test('Has Location header', function () {",
+                  "    pm.response.to.have.header('Location');",
+                  "});",
+                  "var body = pm.response.json();",
+                  "pm.test('Booking is Confirmed with confirmation code', function () {",
+                  "    pm.expect(body.data.status).to.eql('Confirmed');",
+                  "    pm.expect(body.data.confirmationCode).to.match(/^OCT-[A-Z2-9]{5}$/);",
+                  "});",
+                  "pm.collectionVariables.set('bookingId', body.data.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"attendeeName\": \"Ali Dasht\",\n  \"attendeeEmail\": \"ali@test.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/conferences/{{conferenceId}}/bookings",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "conferences", "{{conferenceId}}", "bookings"]
+            }
+          }
+        },
+        {
+          "name": "Book Seat - Invalid Email Format",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"attendeeName\": \"Invalid Email Person\",\n  \"attendeeEmail\": \"not-an-email\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/conferences/{{conferenceId}}/bookings",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "conferences", "{{conferenceId}}", "bookings"]
+            }
+          }
+        },
+        {
+          "name": "Book Seat - Duplicate Email",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 409', function () {",
+                  "    pm.response.to.have.status(409);",
+                  "});",
+                  "pm.test('Response indicates failure', function () {",
+                  "    var body = pm.response.json();",
+                  "    pm.expect(body.success).to.be.false;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"attendeeName\": \"Ali Dasht\",\n  \"attendeeEmail\": \"ali@test.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/conferences/{{conferenceId}}/bookings",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "conferences", "{{conferenceId}}", "bookings"]
+            }
+          }
+        },
+        {
+          "name": "Book Seat - Conference Not Found",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 404', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"attendeeName\": \"Ali Dasht\",\n  \"attendeeEmail\": \"ali@test.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/conferences/00000000-0000-0000-0000-000000000000/bookings",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "conferences", "00000000-0000-0000-0000-000000000000", "bookings"]
+            }
+          }
+        },
+        {
+          "name": "Get Booking By Id - Happy Path",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Returns correct booking', function () {",
+                  "    var body = pm.response.json();",
+                  "    pm.expect(body.data.id).to.eql(pm.collectionVariables.get('bookingId'));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/conferences/{{conferenceId}}/bookings/{{bookingId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "conferences", "{{conferenceId}}", "bookings", "{{bookingId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Booking By Id - Not Found",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 404', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/conferences/{{conferenceId}}/bookings/00000000-0000-0000-0000-000000000000",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "conferences", "{{conferenceId}}", "bookings", "00000000-0000-0000-0000-000000000000"]
+            }
+          }
+        },
+        {
+          "name": "Cancel Booking - Happy Path",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/conferences/{{conferenceId}}/bookings/{{bookingId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "conferences", "{{conferenceId}}", "bookings", "{{bookingId}}"]
+            }
+          }
+        },
+        {
+          "name": "Cancel Booking - Already Cancelled",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/conferences/{{conferenceId}}/bookings/{{bookingId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "conferences", "{{conferenceId}}", "bookings", "{{bookingId}}"]
+            }
+          }
+        },
+        {
+          "name": "Cancel Booking - Not Found",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 404', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/conferences/{{conferenceId}}/bookings/00000000-0000-0000-0000-000000000000",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "conferences", "{{conferenceId}}", "bookings", "00000000-0000-0000-0000-000000000000"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Waitlist Flow",
+      "item": [
+        {
+          "name": "1. Book Seat - Fills Conference (Confirmed)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "var body = pm.response.json();",
+                  "pm.test('Booking is Confirmed', function () {",
+                  "    pm.expect(body.data.status).to.eql('Confirmed');",
+                  "});",
+                  "pm.collectionVariables.set('bookingId', body.data.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"attendeeName\": \"First Attendee\",\n  \"attendeeEmail\": \"first@test.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/conferences/{{fullConferenceId}}/bookings",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "conferences", "{{fullConferenceId}}", "bookings"]
+            }
+          },
+          "description": "Run this against the 1-seat 'Small Workshop' conference created earlier."
+        },
+        {
+          "name": "2. Book Seat - Conference Full (Waitlisted)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201 (waitlisted, not rejected)', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "var body = pm.response.json();",
+                  "pm.test('Booking is Waitlisted', function () {",
+                  "    pm.expect(body.data.status).to.eql('Waitlisted');",
+                  "});",
+                  "pm.collectionVariables.set('waitlistedBookingId', body.data.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"attendeeName\": \"Second Attendee\",\n  \"attendeeEmail\": \"second@test.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/conferences/{{fullConferenceId}}/bookings",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "conferences", "{{fullConferenceId}}", "bookings"]
+            }
+          }
+        },
+        {
+          "name": "3. Cancel First Booking - Triggers Promotion",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/conferences/{{fullConferenceId}}/bookings/{{bookingId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "conferences", "{{fullConferenceId}}", "bookings", "{{bookingId}}"]
+            }
+          }
+        },
+        {
+          "name": "4. Verify Waitlisted Booking Was Promoted",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var body = pm.response.json();",
+                  "pm.test('Booking is now Confirmed', function () {",
+                  "    pm.expect(body.data.status).to.eql('Confirmed');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/conferences/{{fullConferenceId}}/bookings/{{waitlistedBookingId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "conferences", "{{fullConferenceId}}", "bookings", "{{waitlistedBookingId}}"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
