@@ -43,7 +43,7 @@ Octacom.sln
 ### Clone and Run
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/Ali-Dashtebozorgi/Octacom.git
 cd Octacom
 
 dotnet build
@@ -56,7 +56,7 @@ That's it — no manual database setup required. On startup, the application aut
 2. Applies all EF Core migrations
 3. Seeds a default conference (100 seats) if none exists
 
-The API will be available at `https://localhost:{port}`, with Swagger UI at `https://localhost:{port}/swagger`.
+The API will be available at `https://localhost:{7230}`, with Swagger UI at `https://localhost:{7230}/swagger`.
 
 ### Connection String
 
@@ -64,7 +64,7 @@ The default connection string is in `src/Octacom.API/appsettings.json`:
 
 ```json
 "ConnectionStrings": {
-  "DefaultConnection": "Server=(localdb)\\mssqllocaldb;Database=OctacomConferenceDb;Trusted_Connection=True;MultipleActiveResultSets=true"
+  "DefaultConnection": "Data Source=.;Initial Catalog=OctacomConferenceDb;Integrated Security=true;TrustServerCertificate=Yes;"
 }
 ```
 
