@@ -56,7 +56,7 @@ That's it — no manual database setup required. On startup, the application aut
 2. Applies all EF Core migrations
 3. Seeds a default conference (100 seats) if none exists
 
-The API will be available at `https://localhost:{7230}`, with Swagger UI at `https://localhost:{7230}/swagger`.
+The API will be available at `https://localhost:7230`, with Swagger UI at `https://localhost:7230/swagger`.
 
 ### Connection String
 
