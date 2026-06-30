@@ -22,7 +22,7 @@ public class ConferenceConcurrencyTests : IntegrationTestBase
     [Fact]
     public async Task BookSeat_WhenTwoContextsModifySameConferenceConcurrently_SecondSaveShouldThrowDbUpdateConcurrencyException()
     {
-        // Arrange — create a conference with only 1 seat, using a separate setup context
+        
         var conferenceId = Guid.NewGuid();
         using (var setupContext = CreateDbContext())
         {
@@ -31,8 +31,6 @@ public class ConferenceConcurrencyTests : IntegrationTestBase
             await setupContext.SaveChangesAsync();
         }
 
-        // Act — simulate two concurrent requests, each with its own DbContext,
-        // both loading the SAME RowVersion of the conference before either writes
         using var context1 = CreateDbContext();
         using var context2 = CreateDbContext();
 
@@ -45,22 +43,18 @@ public class ConferenceConcurrencyTests : IntegrationTestBase
         conferenceFromRequest1.BookSeat(booking1);
         conferenceFromRequest2.BookSeat(booking2);
 
-        // First request saves successfully — RowVersion in the DB is now updated
         context1.Conferences.Update(conferenceFromRequest1);
         await context1.SaveChangesAsync();
 
-        // Second request tries to save with its now-stale RowVersion
         context2.Conferences.Update(conferenceFromRequest2);
         Func<Task> secondSave = async () => await context2.SaveChangesAsync();
 
-        // Assert
         await secondSave.Should().ThrowAsync<DbUpdateConcurrencyException>();
     }
 
     [Fact]
     public async Task BookSeat_AfterConcurrencyConflict_DatabaseShouldReflectOnlyTheFirstSuccessfulBooking()
     {
-        // Arrange
         var conferenceId = Guid.NewGuid();
         using (var setupContext = CreateDbContext())
         {
@@ -91,10 +85,8 @@ public class ConferenceConcurrencyTests : IntegrationTestBase
         }
         catch (DbUpdateConcurrencyException)
         {
-            // expected — swallow for this test, we only care about final DB state
         }
 
-        // Assert — verify final DB state using a fresh, untouched context
         using var verificationContext = CreateDbContext();
         var finalConference = await verificationContext.Conferences
             .Include(c => c.Bookings)
