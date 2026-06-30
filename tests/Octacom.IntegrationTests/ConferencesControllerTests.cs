@@ -96,11 +96,11 @@ public class ConferencesControllerTests : IntegrationTestBase
         
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var body = await response.Content.ReadFromJsonAsync<ApiResponse<List<ConferenceResponse>>>();
+        var body = await response.Content.ReadFromJsonAsync<ApiResponse<PagedResult<ConferenceResponse>>>();
         body!.Success.Should().BeTrue();
-        body.Data.Should().HaveCount(2);
-        body.Data.Should().Contain(c => c.Name == "Conference A");
-        body.Data.Should().Contain(c => c.Name == "Conference B");
+        body.Data.Items.Should().HaveCount(2);
+        body.Data.Items.Should().Contain(c => c.Name == "Conference A");
+        body.Data.Items.Should().Contain(c => c.Name == "Conference B");
     }
 
     [Fact]
@@ -111,8 +111,8 @@ public class ConferencesControllerTests : IntegrationTestBase
         
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var body = await response.Content.ReadFromJsonAsync<ApiResponse<List<ConferenceResponse>>>();
-        body!.Data.Should().BeEmpty();
+        var body = await response.Content.ReadFromJsonAsync<ApiResponse<PagedResult<ConferenceResponse>>>();
+        body!.Data.Items.Should().BeEmpty();
     }
 
     // -------------------------------------------------------
@@ -177,10 +177,10 @@ public class ConferencesControllerTests : IntegrationTestBase
         
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var body = await response.Content.ReadFromJsonAsync<ApiResponse<List<BookingResponse>>>();
-        body!.Data.Should().HaveCount(2);
-        body.Data.Should().Contain(b => b.AttendeeEmail == "ali@test.com");
-        body.Data.Should().Contain(b => b.AttendeeEmail == "john@test.com");
+        var body = await response.Content.ReadFromJsonAsync<ApiResponse<PagedResult<BookingResponse>>>();
+        body!.Data.Items.Should().HaveCount(2);
+        body.Data.Items.Should().Contain(b => b.AttendeeEmail == "ali@test.com");
+        body.Data.Items.Should().Contain(b => b.AttendeeEmail == "john@test.com");
     }
 
     [Fact]
@@ -207,7 +207,7 @@ public class ConferencesControllerTests : IntegrationTestBase
         
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var body = await response.Content.ReadFromJsonAsync<ApiResponse<List<BookingResponse>>>();
-        body!.Data.Should().BeEmpty();
+        var body = await response.Content.ReadFromJsonAsync<ApiResponse<PagedResult<BookingResponse>>>();
+        body!.Data.Items.Should().BeEmpty();
     }
 }

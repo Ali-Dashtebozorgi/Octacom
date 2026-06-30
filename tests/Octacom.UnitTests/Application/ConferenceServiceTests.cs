@@ -332,44 +332,13 @@ public class ConferenceServiceTests
         await act.Should().ThrowAsync<BookingNotFoundException>();
     }
 
-    // -------------------------------------------------------
-    // GetBookingsByConference
-    // -------------------------------------------------------
-
-    [Fact]
-    public async Task GetBookingsByConference_WhenConferenceExists_ShouldReturnAllBookings()
-    {
-        var conference = CreateConference();
-        conference.BookSeat(CreateBooking(conference.Id, "ali@test.com"));
-        conference.BookSeat(CreateBooking(conference.Id, "john@test.com"));
-        conference.BookSeat(CreateBooking(conference.Id, "jane@test.com"));
-        _conferenceRepositoryMock
-            .Setup(r => r.GetByIdWithBookings(conference.Id))
-            .ReturnsAsync(conference);
-
-        var result = await _sut.GetBookingsByConference(conference.Id);
-        
-        result.Should().HaveCount(3);
-    }
-
-    [Fact]
-    public async Task GetBookingsByConference_WhenConferenceDoesNotExist_ShouldThrowConferenceNotFoundException()
-    {
-        _conferenceRepositoryMock
-            .Setup(r => r.GetByIdWithBookings(It.IsAny<Guid>()))
-            .ReturnsAsync((Conference?)null);
-        
-        Func<Task> act = async () => await _sut.GetBookingsByConference(Guid.NewGuid());
-        
-        await act.Should().ThrowAsync<ConferenceNotFoundException>();
-    }
 
     // -------------------------------------------------------
-    // GetAll
+    // GetAll (Paginated)
     // -------------------------------------------------------
 
     [Fact]
-    public async Task GetAll_WhenConferencesExist_ShouldReturnAllConferences()
+    public async Task GetAll_WhenConferencesExist_ShouldReturnPagedResult()
     {
         
         var conference1 = CreateConference(totalCapacity: 50);
@@ -379,42 +348,135 @@ public class ConferenceServiceTests
             .Setup(r => r.GetAll())
             .ReturnsAsync(new List<Conference> { conference1, conference2 });
 
-        var result = await _sut.GetAll();
+        
+        var result = await _sut.GetAll(page: 1, pageSize: 10);
 
-        result.Should().HaveCount(2);
-        result.Should().Contain(c => c.Id == conference1.Id);
-        result.Should().Contain(c => c.Id == conference2.Id);
+        
+        result.Items.Should().HaveCount(2);
+        result.TotalCount.Should().Be(2);
+        result.Page.Should().Be(1);
+        result.PageSize.Should().Be(10);
+        result.TotalPages.Should().Be(1);
     }
 
     [Fact]
-    public async Task GetAll_WhenNoConferencesExist_ShouldReturnEmptyList()
+    public async Task GetAll_WhenMoreItemsThanPageSize_ShouldReturnOnlyCurrentPageItems()
     {
+        
+        var conferences = Enumerable.Range(1, 25)
+            .Select(_ => CreateConference())
+            .ToList();
+
         _conferenceRepositoryMock
             .Setup(r => r.GetAll())
-            .ReturnsAsync(new List<Conference>());
+            .ReturnsAsync(conferences);
 
-        var result = await _sut.GetAll();
+        
+        var result = await _sut.GetAll(page: 2, pageSize: 10);
 
-        result.Should().BeEmpty();
+        
+        result.Items.Should().HaveCount(10);
+        result.TotalCount.Should().Be(25);
+        result.Page.Should().Be(2);
+        result.TotalPages.Should().Be(3);
     }
 
     [Fact]
-    public async Task GetAll_ShouldReturnCorrectlyMappedConferenceResponse()
+    public async Task GetAll_WhenPageIsLessThanOne_ShouldDefaultToPageOne()
     {
-        var conference = CreateConference(totalCapacity: 30);
+        
+        var conferences = Enumerable.Range(1, 5).Select(_ => CreateConference()).ToList();
+        _conferenceRepositoryMock.Setup(r => r.GetAll()).ReturnsAsync(conferences);
+
+        
+        var result = await _sut.GetAll(page: 0, pageSize: 10);
+
+        
+        result.Page.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task GetAll_WhenPageSizeIsLessThanOne_ShouldDefaultToTen()
+    {
+        
+        var conferences = Enumerable.Range(1, 5).Select(_ => CreateConference()).ToList();
+        _conferenceRepositoryMock.Setup(r => r.GetAll()).ReturnsAsync(conferences);
+
+        
+        var result = await _sut.GetAll(page: 1, pageSize: 0);
+
+        
+        result.PageSize.Should().Be(10);
+    }
+
+    [Fact]
+    public async Task GetAll_WhenPageSizeExceedsMax_ShouldCapAtMax()
+    {
+        
+        var conferences = Enumerable.Range(1, 5).Select(_ => CreateConference()).ToList();
+        _conferenceRepositoryMock.Setup(r => r.GetAll()).ReturnsAsync(conferences);
+
+        
+        var result = await _sut.GetAll(page: 1, pageSize: 500);
+
+        
+        result.PageSize.Should().Be(100);
+    }
+
+    [Fact]
+    public async Task GetAll_WhenNoConferencesExist_ShouldReturnEmptyPagedResult()
+    {
+        
+        _conferenceRepositoryMock.Setup(r => r.GetAll()).ReturnsAsync(new List<Conference>());
+
+        
+        var result = await _sut.GetAll(page: 1, pageSize: 10);
+
+        
+        result.Items.Should().BeEmpty();
+        result.TotalCount.Should().Be(0);
+        result.TotalPages.Should().Be(0);
+    }
+
+    // -------------------------------------------------------
+    // GetBookingsByConferenceAsync (Paginated)
+    // -------------------------------------------------------
+
+    [Fact]
+    public async Task GetBookingsByConferenceAsync_WhenBookingsExist_ShouldReturnPagedResult()
+    {
+        
+        var conference = CreateConference();
+        conference.BookSeat(CreateBooking(conference.Id, "ali@test.com"));
+        conference.BookSeat(CreateBooking(conference.Id, "john@test.com"));
+        conference.BookSeat(CreateBooking(conference.Id, "jane@test.com"));
 
         _conferenceRepositoryMock
-            .Setup(r => r.GetAll())
-            .ReturnsAsync(new List<Conference> { conference });
+            .Setup(r => r.GetByIdWithBookings(conference.Id))
+            .ReturnsAsync(conference);
 
-        var result = await _sut.GetAll();
+        
+        var result = await _sut.GetBookingsByConference(conference.Id, page: 1, pageSize: 2);
 
-        var response = result.Single();
-        response.Id.Should().Be(conference.Id);
-        response.Name.Should().Be(conference.Name);
-        response.TotalCapacity.Should().Be(conference.TotalCapacity);
-        response.BookedSeats.Should().Be(conference.BookedSeats);
-        response.AvailableSeats.Should().Be(conference.AvailableSeats);
+        
+        result.Items.Should().HaveCount(2);
+        result.TotalCount.Should().Be(3);
+        result.TotalPages.Should().Be(2);
+    }
+
+    [Fact]
+    public async Task GetBookingsByConferenceAsync_WhenConferenceDoesNotExist_ShouldThrowConferenceNotFoundException()
+    {
+        
+        _conferenceRepositoryMock
+            .Setup(r => r.GetByIdWithBookings(It.IsAny<Guid>()))
+            .ReturnsAsync((Conference?)null);
+
+        
+        Func<Task> act = async () => await _sut.GetBookingsByConference(Guid.NewGuid(), page: 1, pageSize: 10);
+
+        
+        await act.Should().ThrowAsync<ConferenceNotFoundException>();
     }
 
 }

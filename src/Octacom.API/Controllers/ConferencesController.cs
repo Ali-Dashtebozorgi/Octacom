@@ -26,11 +26,12 @@ public class ConferencesController : ControllerBase
     }
 
     [HttpGet]
-    [ProducesResponseType(typeof(ApiResponse<List<ConferenceResponse>>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<List<ConferenceResponse>>>> GetConferences()
+    [ProducesResponseType(typeof(ApiResponse<PagedResult<ConferenceResponse>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<PagedResult<ConferenceResponse>>>> GetConferences([FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10)
     {
-        var conferences = await _conferenceService.GetAll();
-        return Ok(ApiResponse<List<ConferenceResponse>>.Ok(conferences));
+        var conferences = await _conferenceService.GetAll(page, pageSize);
+        return Ok(ApiResponse<PagedResult<ConferenceResponse>>.Ok(conferences));
     }
 
     [HttpGet("{id:guid}")]
@@ -43,11 +44,12 @@ public class ConferencesController : ControllerBase
     }
 
     [HttpGet("{id:guid}/bookings")]
-    [ProducesResponseType(typeof(ApiResponse<IEnumerable<BookingResponse>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<PagedResult<BookingResponse>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ApiResponse<IEnumerable<BookingResponse>>>> GetBookings(Guid id)
+    public async Task<ActionResult<ApiResponse<PagedResult<BookingResponse>>>> GetBookings(Guid id, [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10)
     {
-        var result = await _conferenceService.GetBookingsByConference(id);
-        return Ok(ApiResponse<IEnumerable<BookingResponse>>.Ok(result));
+        var result = await _conferenceService.GetBookingsByConference(id, page, pageSize);
+        return Ok(ApiResponse<PagedResult<BookingResponse>>.Ok(result));
     }
 }

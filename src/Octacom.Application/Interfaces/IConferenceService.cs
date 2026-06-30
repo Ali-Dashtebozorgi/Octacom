@@ -13,7 +13,7 @@ public interface IConferenceService
     Task<BookingResponse> BookSeat(Guid conferenceId, BookSeatRequest request);
     Task CancelSeat(Guid conferenceId, Guid bookingId);
     Task<BookingResponse> GetBooking(Guid conferenceId, Guid bookingId);
-    Task<IEnumerable<BookingResponse>> GetBookingsByConference(Guid conferenceId);
-    Task<List<ConferenceResponse>> GetAll();
+    Task<PagedResult<BookingResponse>> GetBookingsByConference(Guid conferenceId, int page, int pageSize);
+    Task<PagedResult<ConferenceResponse>> GetAll(int page, int pageSize);
 }
 

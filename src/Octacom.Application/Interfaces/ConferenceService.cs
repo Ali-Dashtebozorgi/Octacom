@@ -9,6 +9,8 @@ namespace Octacom.Application.Interfaces;
 public class ConferenceService : IConferenceService
 {
     private readonly IConferenceRepository _conferenceRepository;
+    private const int DefaultPageSize = 10;
+    private const int MaxPageSize = 100;
 
     public ConferenceService(IConferenceRepository conferenceRepository)
     {
@@ -76,21 +78,60 @@ public class ConferenceService : IConferenceService
         return MapToBookingResponse(booking);
     }
 
-    public async Task<IEnumerable<BookingResponse>> GetBookingsByConference(Guid conferenceId)
+    public async Task<PagedResult<BookingResponse>> GetBookingsByConference(Guid conferenceId, int page, int pageSize)
     {
+        (page, pageSize) = NormalizePagination(page, pageSize);
+
         var conference = await _conferenceRepository.GetByIdWithBookings(conferenceId)
                          ?? throw new ConferenceNotFoundException(conferenceId);
 
-        return conference.Bookings.Select(MapToBookingResponse);
+        var totalCount = conference.Bookings.Count;
+        var items = conference.Bookings
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(MapToBookingResponse)
+            .ToList();
+
+        return new PagedResult<BookingResponse>
+        {
+            Items = items,
+            Page = page,
+            PageSize = pageSize,
+            TotalCount = totalCount,
+            TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize)
+        };
     }
 
-    public async Task<List<ConferenceResponse>> GetAll()
+    public async Task<PagedResult<ConferenceResponse>> GetAll(int page, int pageSize)
     {
+        (page, pageSize) = NormalizePagination(page, pageSize);
+
         var conferences = await _conferenceRepository.GetAll();
-        return conferences
+
+        var totalCount = conferences.Count;
+        var items = conferences
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .Select(MapToConferenceResponse)
             .ToList();
 
+        return new PagedResult<ConferenceResponse>
+        {
+            Items = items,
+            Page = page,
+            PageSize = pageSize,
+            TotalCount = totalCount,
+            TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize)
+        };
+    }
+
+    private static (int Page, int PageSize) NormalizePagination(int page, int pageSize)
+    {
+        if (page < 1) page = 1;
+        if (pageSize < 1) pageSize = DefaultPageSize;
+        if (pageSize > MaxPageSize) pageSize = MaxPageSize;
+
+        return (page, pageSize);
     }
 
     private static ConferenceResponse MapToConferenceResponse(Conference conference) => new()
