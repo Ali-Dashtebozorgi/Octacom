@@ -43,7 +43,7 @@ Octacom.sln
 ### Clone and Run
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/Ali-Dashtebozorgi/Octacom.git
 cd Octacom
 
 dotnet build
