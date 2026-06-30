@@ -20,6 +20,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\Octacom.API\Octacom.API.csproj" />
+    <ProjectReference Include="..\..\src\Octacom.Application\Octacom.Application.csproj" />
+    <ProjectReference Include="..\..\src\Octacom.Infrastructure\Octacom.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>
 

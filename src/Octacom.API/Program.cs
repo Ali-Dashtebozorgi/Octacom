@@ -41,7 +41,6 @@ builder.Services.AddDbContext<ConferenceDbContext>(options =>
 
 builder.Services.AddScoped<IConferenceRepository, ConferenceRepository>();
 
-
 builder.Services.AddScoped<IConferenceService, ConferenceService>();
 
 builder.Services.AddScoped<DatabaseSeeder>();
@@ -71,3 +70,5 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+public partial class Program { }
